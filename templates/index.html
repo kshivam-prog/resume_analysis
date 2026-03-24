@@ -4,54 +4,47 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nexus AI | Resume Analyzer</title>
+  <title>Resume Gap Analyzer | Friendly & Human</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 
-  <div class="mesh-bg"></div>
-
   <div class="container">
     <div class="hero">
-      <div class="hero-badges">
-        <div class="hero-badge">✨ GenZ AI Powered</div>
-        <div class="hero-badge">🎯 ATS Optimized</div>
-        <div class="hero-badge">⚡ Instant Insights</div>
-      </div>
-      <h1>Unlock Your <span>Career Engine.</span></h1>
-      <p>Upload your resume and the target job description. Our heuristic AI infrastructure will deeply map your skillset, predict your ATS compatibility, and highlight critical gaps holding you back.</p>
+      <h1>Let's see how your resume stacks up.</h1>
+      <p>Upload your resume and the job description you're aiming for. We'll cross-check your skills and give you simple, honest feedback on what to improve.</p>
     </div>
 
     <!-- Interface Panel -->
-    <div class="glass-panel" id="input-section">
+    <div class="panel" id="input-section">
       <form id="analyze-form" enctype="multipart/form-data">
         <div class="input-grid">
           <div class="input-col">
-            <label>Target Job Context</label>
-            <textarea id="job_description" class="smart-textarea" placeholder="Paste the exact duties and requirements of your target role..." required></textarea>
+            <label>Job Description</label>
+            <textarea id="job_description" class="smart-textarea" placeholder="Paste the job requirements and duties here..." required></textarea>
           </div>
           
           <div class="input-col">
-            <label>Candidate Payload</label>
+            <label>Your Resume (PDF)</label>
             <div class="drag-drop-zone" id="drop-zone">
               <div class="upload-icon">📄</div>
-              <div class="file-status" id="file-name">Drag & Drop Resume<br><br><span>Browse Computer</span> (.pdf)</div>
+              <div class="file-status" id="file-name">Drag & Drop Resume<br><br><span>Browse files</span></div>
               <input type="file" id="resume" accept=".pdf" required>
             </div>
           </div>
         </div>
 
-        <button type="submit" id="analyze-btn" class="btn-premium">Initialize Analysis Engine</button>
+        <button type="submit" id="analyze-btn" class="btn-primary">Analyze My Resume</button>
       </form>
     </div>
 
     <!-- Smart Loader -->
     <div class="ai-loader" id="ai-loader">
       <div class="loader-ring"></div>
-      <div class="loader-text" id="loader-ticker">Scanning Resume Payload...</div>
+      <div class="loader-text" id="loader-ticker">Reading your resume...</div>
     </div>
 
-    <!-- AI Dashboard Metrics -->
+    <!-- Dashboard Results -->
     <div class="dashboard-metrics" id="dashboard">
       
       <div class="stats-row">
@@ -65,57 +58,53 @@
           <div class="circle-progress" id="circle-skill">
             <div class="circle-value"><span id="val-skill">0</span>%</div>
           </div>
-          <div class="stat-label">Core Skills</div>
+          <div class="stat-label">Core Skills Found</div>
         </div>
         <div class="stat-card">
           <div class="circle-progress" id="circle-exp">
             <div class="circle-value"><span id="val-exp">0</span>%</div>
           </div>
-          <div class="stat-label">Experience Density</div>
+          <div class="stat-label">Experience Check</div>
         </div>
         <div class="stat-card">
           <div class="circle-progress" id="circle-ats">
             <div class="circle-value"><span id="val-ats">0</span>%</div>
           </div>
-          <div class="stat-label">ATS Probability</div>
+          <div class="stat-label">Screening Potential</div>
         </div>
       </div>
 
       <div class="feature-grid">
         
         <div class="data-panel">
-          <h3>⚡ Strengths & Highlighted Dependencies</h3>
-          <div class="chip-container" id="matched-chips">
+          <h3>Your Strengths & Skills</h3>
+          <div class="chip-container" id="matched-chips" style="margin-bottom: 25px;">
             <!-- JS Injection -->
           </div>
-          <h3 style="margin-top:30px;">🚨 Critical Keyword Gaps</h3>
+          <h3>Skills You Might Be Missing</h3>
           <div class="chip-container" id="missing-chips">
             <!-- JS Injection -->
           </div>
         </div>
 
         <div class="data-panel">
-          <h3>🧠 Semantic & Structural Analysis</h3>
+          <h3>Resume Quality Check</h3>
           <ul class="insight-list">
             <li>
-              <span class="insight-icon">📏</span>
-              <span><strong>Document Length:</strong> <span id="len-val">Optimal</span></span>
+              <strong>Document Length</strong>
+              <span id="len-val">Optimal</span>
             </li>
             <li>
-              <span class="insight-icon">📉</span>
-              <span><strong>Missing Action Verbs:</strong> <span id="verb-val">None detected</span></span>
+              <strong>Passive Action Verbs Found</strong>
+              <span id="verb-val">None detected</span>
             </li>
             <li>
-              <span class="insight-icon">💡</span>
-              <span><strong>Action Verb Suggestions:</strong> <span id="sug-val">N/A</span></span>
+              <strong>Stronger Words to Use Instead</strong>
+              <span id="sug-val">N/A</span>
             </li>
             <li>
-              <span class="insight-icon">🏭</span>
-              <span><strong>Industry Readiness:</strong> <span id="ind-val">0</span>/100</span>
-            </li>
-            <li>
-              <span class="insight-icon">🎙️</span>
-              <span><strong>Interview Viability:</strong> <span id="int-val">0</span>/100</span>
+              <strong>General Industry Familiarity</strong>
+              <span id="ind-val">0</span>/100
             </li>
           </ul>
         </div>
@@ -123,8 +112,8 @@
       </div>
 
       <div class="verdict-box">
-        <h2>System Verdict</h2>
-        <p id="conclusion-text">Awaiting diagnostic payload generation...</p>
+        <h2>Our Final Thoughts</h2>
+        <p id="conclusion-text">Awaiting your resume...</p>
       </div>
 
     </div>
@@ -138,18 +127,18 @@
 
   fileInput.addEventListener('change', function() {
     if(this.files.length > 0) {
-      fileDisplay.innerHTML = `<span style="color:#10b981">✓ Verified:</span><br>${this.files[0].name}`;
+      fileDisplay.innerHTML = `<span style="color:#059669">Successfully attached:</span><br>${this.files[0].name}`;
       dropZone.style.borderColor = '#10b981';
-      dropZone.style.background = 'rgba(16, 185, 129, 0.05)';
+      dropZone.style.background = '#f0fdf4';
     }
   });
 
   const loadingMessages = [
-    "Parsing unstructured text...",
-    "Extracting semantic entities...",
-    "Computing ATS probability matrices...",
-    "Cross-referencing JD algorithms...",
-    "Synthesizing final verdict..."
+    "Reading your resume...",
+    "Finding matching skills...",
+    "Reviewing your experience...",
+    "Checking formatting...",
+    "Putting it all together..."
   ];
 
   function runLoader() {
@@ -168,8 +157,8 @@
     let color = '#ef4444'; // red
     if(pct >= 50) color = '#fbbf24'; // yellow
     if(pct >= 80) color = '#10b981'; // green
-    circle.style.background = `conic-gradient(${color} ${pct}%, rgba(255,255,255,0.05) ${pct}%)`;
-    circle.querySelector('span').style.color = '#fff';
+    circle.style.background = `conic-gradient(${color} ${pct}%, #f3f4f6 ${pct}%)`;
+    circle.querySelector('span').style.color = '#111827';
   }
 
   document.getElementById('analyze-form').addEventListener('submit', async function(e) {
@@ -222,22 +211,21 @@
         // Semantic lists
         let lStat = data.length_status;
         document.getElementById('len-val').textContent = lStat;
-        if(lStat==="Optimal") document.getElementById('len-val').style.color="#10b981";
-        else document.getElementById('len-val').style.color="#ef4444";
+        if(lStat==="Optimal") document.getElementById('len-val').style.color="#059669";
+        else document.getElementById('len-val').style.color="#dc2626";
 
-        const verbs = data.weak_verbs.length > 0 ? data.weak_verbs.join(', ') : "None detected ✓";
+        const verbs = data.weak_verbs.length > 0 ? data.weak_verbs.join(', ') : "None detected!";
         document.getElementById('verb-val').textContent = verbs;
-        if(data.weak_verbs.length===0) document.getElementById('verb-val').style.color="#10b981";
-        else document.getElementById('verb-val').style.color="#ef4444";
+        if(data.weak_verbs.length===0) document.getElementById('verb-val').style.color="#059669";
+        else document.getElementById('verb-val').style.color="#dc2626";
 
         document.getElementById('sug-val').textContent = data.strong_verb_suggestions.join(', ');
         document.getElementById('ind-val').textContent = data.industry_score;
-        document.getElementById('int-val').textContent = data.interview_score;
 
         document.getElementById('conclusion-text').textContent = data.conclusion;
       }
     } catch(e) {
-      alert("System failure or Timeout. Try again.");
+      alert("Something went wrong while reading your file. Please try again.");
       document.getElementById('ai-loader').style.display = 'none';
       document.getElementById('input-section').style.display = 'block';
     }
