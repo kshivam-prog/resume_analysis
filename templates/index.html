@@ -1,0 +1,216 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Gap Analyzer AI</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Resume Gap Analyzer</h1>
+      <p>AI-powered insights to match your skills against the perfect job description. Find your gaps, highlight your pros, and get actionable improvement advice instantly.</p>
+    </div>
+
+    <!-- Analyzer Form -->
+    <div class="glass-card">
+      <form id="analyze-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="job_description">Job Description</label>
+          <textarea id="job_description" name="job_description" placeholder="Paste the full job or internship description here..." required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Upload Resume</label>
+          <div class="file-drop-area">
+            <span class="file-msg" id="file-name-display">Drag & drop or <span>Browse</span> (.pdf)</span>
+            <input type="file" id="resume" name="resume" accept=".pdf" required>
+          </div>
+        </div>
+
+        <button type="submit" id="analyze-btn" class="btn-primary">Analyze Match</button>
+      </form>
+    </div>
+
+    <!-- Dynamic Results Dashboard -->
+    <div class="results-dashboard" id="results-container">
+      
+      <!-- Score Overview -->
+      <div class="glass-card score-section">
+        <div class="score-circle" id="score-circle">
+          <div class="score-value"><span id="match-percentage">0</span>%</div>
+        </div>
+        <div class="score-text">
+          <h2 id="score-title">Analysis Complete</h2>
+          <p>We've compared your resume against the job description. Review your technical match score, core strengths, and areas requiring attention below.</p>
+        </div>
+      </div>
+
+      <!-- Detail Grid -->
+      <div class="metrics-grid">
+        
+        <div class="metric-card pros">
+          <h3 class="pros-title">✦ Top Pros</h3>
+          <ul id="pros-list">
+            <!-- Populated via JS -->
+          </ul>
+        </div>
+
+        <div class="metric-card gaps">
+          <h3 class="gaps-title">⚠ Areas of Improvement</h3>
+          <ul id="improvements-list">
+             <!-- Populated via JS -->
+          </ul>
+        </div>
+
+        <div class="metric-card">
+          <h3>✅ Matched Skills</h3>
+          <div class="tags" id="matched-tags">
+             <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <h3 class="missing-title">❌ Missing Skills</h3>
+          <div class="tags" id="missing-tags">
+             <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Conclusion -->
+      <div class="conclusion-card">
+        <h3>Final Verdict</h3>
+        <p id="conclusion-text">...</p>
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+  // UI Interaction for File Upload
+  const fileInput = document.getElementById('resume');
+  const fileDisplay = document.getElementById('file-name-display');
+
+  fileInput.addEventListener('change', function(e) {
+    if(this.files && this.files.length > 0) {
+      fileDisplay.textContent = this.files[0].name;
+      fileDisplay.style.color = '#212529';
+    } else {
+      fileDisplay.innerHTML = 'Drag & drop or <span>Browse</span> (.pdf)';
+    }
+  });
+
+  // Form Submission
+  document.getElementById('analyze-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('analyze-btn');
+    const resultsContainer = document.getElementById('results-container');
+    
+    btn.textContent = "Analyzing Document...";
+    btn.disabled = true;
+    resultsContainer.style.display = 'none';
+
+    const jobDescription = document.getElementById('job_description').value;
+    const resumeFile = fileInput.files[0];
+
+    const formData = new FormData();
+    formData.append("job_description", jobDescription);
+    formData.append("resume", resumeFile);
+
+    try {
+      const response = await fetch('http://localhost:8001/analyze', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.error) {
+          alert("Error parsing document: " + data.error);
+        } else {
+          // Display the container
+          resultsContainer.style.display = 'block';
+          
+          // Animate Score Ring
+          const circle = document.getElementById('score-circle');
+          const pct = data.match_percentage;
+          const color = '#0d6efd'; // Professional Blue
+          
+          circle.style.background = `conic-gradient(${color} ${pct}%, #e9ecef ${pct}%)`;
+          document.getElementById('match-percentage').textContent = pct;
+          
+          // Reset any webkit specific styling applied by previous code
+          document.querySelector('.score-value').style.background = 'none';
+          document.querySelector('.score-value').style.webkitBackgroundClip = 'initial';
+          document.querySelector('.score-value').style.webkitTextFillColor = 'initial';
+          document.querySelector('.score-value').style.color = '#212529';
+
+          // Set Pros
+          const prosList = document.getElementById('pros-list');
+          prosList.innerHTML = '';
+          data.pros.forEach(pro => {
+            const li = document.createElement('li');
+            li.textContent = pro;
+            prosList.appendChild(li);
+          });
+
+          // Set Improvements
+          const impList = document.getElementById('improvements-list');
+          impList.innerHTML = '';
+          data.improvements.forEach(imp => {
+            const li = document.createElement('li');
+            li.textContent = imp;
+            impList.appendChild(li);
+          });
+
+          // Set Matched Skills Tags
+          const matchTags = document.getElementById('matched-tags');
+          matchTags.innerHTML = '';
+          if(data.matched_skills.length === 0) matchTags.innerHTML = '<p style="color:#64748b">No matches found.</p>';
+          data.matched_skills.forEach(skill => {
+            const span = document.createElement('span');
+            span.className = 'tag matched';
+            span.textContent = skill;
+            matchTags.appendChild(span);
+          });
+
+          // Set Missing Skills Tags
+          const missingTags = document.getElementById('missing-tags');
+          missingTags.innerHTML = '';
+          if(data.missing_skills.length === 0) missingTags.innerHTML = '<p style="color:#64748b">All requirements met!</p>';
+          data.missing_skills.forEach(skill => {
+            const span = document.createElement('span');
+            span.className = 'tag missing';
+            span.textContent = skill;
+            missingTags.appendChild(span);
+          });
+
+          // Set Conclusion
+          document.getElementById('conclusion-text').textContent = data.conclusion;
+
+          // Scroll Smoothly to Results
+          window.scrollTo({ top: resultsContainer.offsetTop - 50, behavior: 'smooth' });
+        }
+      } else {
+          alert("Backend analysis failed (API error). Ensure FastAPI is running on port 8001.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Could not reach analysis backend. Did you start the FastAPI server on port 8001?");
+    } finally {
+      btn.textContent = "Analyze Match";
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

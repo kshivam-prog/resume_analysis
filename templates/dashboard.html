@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skill Gap Analyzer</title>
+
+<!-- Correct CSS loading -->
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<div class="dashboard">
+  <h2 style="text-align:center;color:#e6b89c;">Skill Gap Analysis</h2>
+
+  <!-- Django-safe form -->
+  <form id="analyze-form" class="card" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <textarea id="job_description" name="job_description" placeholder="Paste job or internship description here..." required></textarea>
+    <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+
+    <button type="submit" id="analyze-btn" class="btn">Analyze</button>
+  </form>
+
+  <!-- Static example results (will be dynamic later) -->
+  <div class="results" id="results-container" style="display: none;">
+    <div class="result-box">
+      <h3>Missing Skills</h3>
+      <p id="missing-skills-box">...</p>
+    </div>
+
+    <div class="result-box">
+      <h3>Matched Skills</h3>
+      <p id="matched-skills-box">...</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Improve your resume before you apply 🚀
+</div>
+
+<script>
+document.getElementById('analyze-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const btn = document.getElementById('analyze-btn');
+  btn.textContent = "Analyzing...";
+  btn.disabled = true;
+
+  const jobDescription = document.getElementById('job_description').value;
+  const resumeFile = document.getElementById('resume').files[0];
+
+  const formData = new FormData();
+  formData.append("job_description", jobDescription);
+  formData.append("resume", resumeFile);
+
+  try {
+    const response = await fetch('http://localhost:8001/analyze', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.error) {
+        alert("Error parsing document: " + data.error);
+      } else {
+        document.getElementById('results-container').style.display = 'flex';
+        
+        let missingText = data.missing_skills.length > 0 ? data.missing_skills.join(', ') : 'None! Great match.';
+        let matchedText = data.matched_skills.length > 0 ? data.matched_skills.join(', ') : 'None found.';
+
+        document.getElementById('missing-skills-box').textContent = missingText;
+        document.getElementById('matched-skills-box').textContent = matchedText;
+      }
+    } else {
+        alert("Backend analysis failed (API error). Ensure FastAPI is running on port 8001.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Could not reach analysis backend. Did you start the FastAPI server on port 8001?");
+  } finally {
+    btn.textContent = "Analyze";
+    btn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
