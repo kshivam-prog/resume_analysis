@@ -72,10 +72,13 @@ async def analyze_resume(
                 response = requests.get(job_description, headers=headers, timeout=10)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.content, "html.parser")
-                # Remove script and style elements
-                for script in soup(["script", "style"]):
-                    script.decompose()
-                final_job_description = soup.get_text(separator=' ', strip=True)
+                # Remove non-content elements
+                for element in soup(["script", "style", "nav", "footer", "header", "aside"]):
+                    element.decompose()
+                
+                # Get text and limit to a reasonable length (10,000 chars)
+                scraped_text = soup.get_text(separator=' ', strip=True)
+                final_job_description = scraped_text[:10000] 
             except Exception as e:
                 return {"error": f"Failed to fetch job description from URL: {str(e)}"}
         else:

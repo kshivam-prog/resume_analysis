@@ -219,7 +219,17 @@
         ? 'http://localhost:8001/analyze'
         : '/analyze';
 
-      const response = await fetch(apiUrl, { method: 'POST', body: formData });
+      // 30-second Timeout Controller
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const response = await fetch(apiUrl, { 
+        method: 'POST', 
+        body: formData,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -272,9 +282,15 @@
         document.getElementById('conclusion-text').textContent = data.conclusion;
       }
     } catch(e) {
-      alert("Something went wrong while reading your file. Please try again.");
+      clearInterval(loadInt);
       document.getElementById('ai-loader').style.display = 'none';
       document.getElementById('input-section').style.display = 'block';
+      
+      if (e.name === 'AbortError') {
+        alert("The analysis is taking too long. Your URL or image might be too large for the server. Please try again or copy/paste the text directly.");
+      } else {
+        alert("Something went wrong while reading your file. Please try again.");
+      }
     }
   });
 </script>
