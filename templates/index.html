@@ -157,7 +157,11 @@
     "Finding matching skills...",
     "Reviewing your experience...",
     "Checking formatting...",
-    "Putting it all together..."
+    "Extracting Job details...",
+    "Applying AI logic...",
+    "Putting it all together...",
+    "Still working, this might take a moment...",
+    "Almost there, finalizing data..."
   ];
 
   function runLoader() {
@@ -165,9 +169,13 @@
     let i = 0;
     const interval = setInterval(() => {
       i++;
-      if (i < loadingMessages.length) ticker.textContent = loadingMessages[i];
-      else clearInterval(interval);
-    }, 600);
+      if (i < loadingMessages.length) {
+        ticker.textContent = loadingMessages[i];
+      } else {
+        // Just stay on the last message if it takes even longer
+        ticker.textContent = "Finalizing your results...";
+      }
+    }, 1500); // Slower interval for better readability
     return interval;
   }
 

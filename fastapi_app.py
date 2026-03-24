@@ -85,6 +85,12 @@ async def analyze_resume(
         try:
             image_bytes = await job_image.read()
             image = Image.open(io.BytesIO(image_bytes))
+            
+            # Optimization: Resize if too large and convert to grayscale
+            max_size = (1500, 1500)
+            image.thumbnail(max_size, Image.Resampling.LANCZOS)
+            image = image.convert('L') # Grayscale
+            
             extracted_text = pytesseract.image_to_string(image)
             final_job_description += " " + extracted_text
         except Exception as e:
