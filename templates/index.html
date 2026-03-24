@@ -125,7 +125,11 @@
     formData.append("resume", resumeFile);
 
     try {
-      const response = await fetch('http://localhost:8001/analyze', {
+      const apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:8001/analyze'
+        : '/analyze';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData
       });
