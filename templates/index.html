@@ -21,7 +21,8 @@
         <div class="input-grid">
           <div class="input-col">
             <label>Job Description</label>
-            <textarea id="job_description" class="smart-textarea" placeholder="Paste the job requirements and duties here..." required></textarea>
+            <textarea id="job_description" class="smart-textarea" placeholder="Paste the job requirements, a URL, or an image screenshot here..."></textarea>
+            <div id="pasted-image-status" style="display:none; color:#059669; margin-top: 10px; font-weight: 500; font-size: 0.9em;"></div>
           </div>
           
           <div class="input-col">
@@ -133,6 +134,24 @@
     }
   });
 
+  let pastedImageFile = null;
+  const jobDescTextarea = document.getElementById('job_description');
+  const imgStatus = document.getElementById('pasted-image-status');
+
+  jobDescTextarea.addEventListener('paste', function(e) {
+    if (e.clipboardData && e.clipboardData.items) {
+      for (let i = 0; i < e.clipboardData.items.length; i++) {
+        if (e.clipboardData.items[i].type.indexOf("image") === 0) {
+          pastedImageFile = e.clipboardData.items[i].getAsFile();
+          imgStatus.innerHTML = `✅ Image attached: ${pastedImageFile.name || 'screenshot.png'}`;
+          imgStatus.style.display = 'block';
+          jobDescTextarea.value = "(Image screenshot attached)";
+          e.preventDefault();
+        }
+      }
+    }
+  });
+
   const loadingMessages = [
     "Reading your resume...",
     "Finding matching skills...",
@@ -170,9 +189,22 @@
     const loadInt = runLoader();
 
     const jobDesc = document.getElementById('job_description').value;
+    const finalJobDesc = jobDesc === "(Image screenshot attached)" ? "" : jobDesc;
+
+    if (!finalJobDesc && !pastedImageFile) {
+        alert("Please paste the job description text, a URL, or an image screenshot.");
+        clearInterval(loadInt);
+        document.getElementById('ai-loader').style.display = 'none';
+        document.getElementById('input-section').style.display = 'block';
+        return;
+    }
+
     const formData = new FormData();
-    formData.append("job_description", jobDesc);
+    formData.append("job_description", finalJobDesc);
     formData.append("resume", fileInput.files[0]);
+    if (pastedImageFile) {
+      formData.append("job_image", pastedImageFile);
+    }
 
     try {
       const apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -185,6 +217,13 @@
         const data = await response.json();
         clearInterval(loadInt);
         
+        if (data.error) {
+            alert(data.error);
+            document.getElementById('ai-loader').style.display = 'none';
+            document.getElementById('input-section').style.display = 'block';
+            return;
+        }
+
         document.getElementById('ai-loader').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
 

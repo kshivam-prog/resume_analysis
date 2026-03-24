@@ -4,6 +4,11 @@ import random
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import PyPDF2
+import requests
+from bs4 import BeautifulSoup
+from PIL import Image
+import pytesseract
+import io
 
 app = FastAPI()
 
@@ -40,8 +45,9 @@ def extract_skills(text):
 
 @app.post("/analyze")
 async def analyze_resume(
-    job_description: str = Form(...),
-    resume: UploadFile = File(...)
+    resume: UploadFile = File(...),
+    job_description: str = Form(None),
+    job_image: UploadFile = File(None)
 ):
     text = ""
     try:
@@ -55,15 +61,48 @@ async def analyze_resume(
 
     text_lower = text.lower()
     resume_skills = extract_skills(text)
-    job_skills = extract_skills(job_description)
+    
+    final_job_description = ""
+    
+    if job_description:
+        if job_description.startswith("http://") or job_description.startswith("https://"):
+            try:
+                # Add headers to avoid some basic bot blocks
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+                response = requests.get(job_description, headers=headers, timeout=10)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.content, "html.parser")
+                # Remove script and style elements
+                for script in soup(["script", "style"]):
+                    script.decompose()
+                final_job_description = soup.get_text(separator=' ', strip=True)
+            except Exception as e:
+                return {"error": f"Failed to fetch job description from URL: {str(e)}"}
+        else:
+            final_job_description = job_description
+            
+    if job_image:
+        try:
+            image_bytes = await job_image.read()
+            image = Image.open(io.BytesIO(image_bytes))
+            extracted_text = pytesseract.image_to_string(image)
+            final_job_description += " " + extracted_text
+        except Exception as e:
+            return {"error": f"Failed to process job description image: {str(e)}"}
+            
+    if not final_job_description.strip():
+        return {"error": "Please provide either a job description text, a valid URL, or an image."}
+
+    job_skills = extract_skills(final_job_description)
+
+    if not job_skills:
+        return {"error": "Could not extract any technical skills from the job description. If you provided a URL, the site might be blocking bots. Please copy and paste the text directly."}
 
     matched_skills = list(job_skills.intersection(resume_skills))
     missing_skills = list(job_skills.difference(resume_skills))
     
     total_needed = len(job_skills)
     skill_match = int((len(matched_skills) / total_needed) * 100) if total_needed > 0 else 0
-    if total_needed == 0 and len(resume_skills) > 0:
-        skill_match = 100
 
     # Simulate deep AI insights heuristically
     
@@ -80,19 +119,29 @@ async def analyze_resume(
     found_weak_verbs = [v for v in WEAK_VERBS if f" {v} " in text_lower]
 
     # 3. Education Score
-    has_degree = "university" in text_lower or "college" in text_lower or "bachelor" in text_lower or "master" in text_lower or "phd" in text_lower or "b.s." in text_lower or "bsc" in text_lower
-    education_score = random.randint(85, 98) if has_degree else random.randint(40, 65)
+    text_lower_no_space = text_lower.replace(" ", "")
+    has_phd = "phd" in text_lower or "doctorate" in text_lower
+    has_master = "master" in text_lower or "m.s." in text_lower or "msc" in text_lower
+    has_bachelor = "bachelor" in text_lower or "b.s." in text_lower or "bsc" in text_lower or "university" in text_lower or "college" in text_lower
+    
+    if has_phd:
+        education_score = 100
+    elif has_master:
+        education_score = 90
+    elif has_bachelor:
+        education_score = 80
+    else:
+        education_score = 50
 
     # 4. Experience Score
     years_mentions = len(re.findall(r'\d+\s+years?', text_lower))
-    exp_variance = random.randint(-5, 10)
-    experience_score = min(100, max(0, skill_match + (years_mentions * 5) + exp_variance))
+    experience_score = min(100, skill_match + (years_mentions * 10))
 
     # 5. Core Scores
     overall_match = int((skill_match * 0.5) + (experience_score * 0.3) + (education_score * 0.2))
     ats_score = int(overall_match * 0.9) if length_status != "Optimal" else min(100, overall_match + 5)
-    industry_readiness = min(100, overall_match + random.randint(-5, 8))
-    interview_readiness = max(0, overall_match - random.randint(5, 15))
+    industry_readiness = skill_match
+    interview_readiness = max(0, overall_match - (len(missing_skills) * 2))
 
     # 6. Conclusion & Suggestions
     pros = []
@@ -111,13 +160,32 @@ async def analyze_resume(
     if length_status == "Too Short":
         improvements.append("Resume brevity may fail to parse effectively. Expand project descriptions using the STAR method.")
         
-    conclusion = ""
+    conclusion_parts = []
+    
     if overall_match >= 80:
-        conclusion = "Top 5% Candidate Match. Your resume architecture and technical depth heavily index against the job description. Minor formatting tweaks recommended before immediate submission."
+        conclusion_parts.append("✅ Strong Match. Your resume looks great for this role.")
     elif overall_match >= 50:
-        conclusion = "Competitive Candidate Matrix. You clear the primary ATS filters but fall short on specific industry tooling. Inject missing keywords organically into recent experience nodes."
+        conclusion_parts.append("⚠️ Average Match. You meet some requirements but need updates to stand out.")
     else:
-        conclusion = "High-Risk Application profile. The current variant severely under-indexes against the core competencies dictated by the JD. Widespread structural and technical revisions required."
+        conclusion_parts.append("❌ Weak Match. Your resume needs major updates to fit this job.")
+
+    if missing_skills:
+        missing_str = ", ".join([s.title() for s in missing_skills[:3]])
+        conclusion_parts.append(f"What to ADD: You are missing important skills like {missing_str}.")
+    else:
+        conclusion_parts.append("What to ADD: Your core skills match! Just ensure your experience clearly proves them.")
+
+    if found_weak_verbs:
+        verbs_str = ", ".join(found_weak_verbs)
+        conclusion_parts.append(f"What to AVOID: Remove weak words like '{verbs_str}' and use strong action verbs (e.g., 'Engineered', 'Directed').")
+    elif length_status == "Too Short":
+        conclusion_parts.append("What to AVOID: Avoid being too brief. Expand your bullet points with details.")
+    elif length_status == "Too Long":
+        conclusion_parts.append("What to AVOID: Avoid lengthy descriptions. Keep it concise to one or two pages.")
+    else:
+        conclusion_parts.append("What to AVOID: Try not to add unnecessary fluff. Keep your descriptions impactful.")
+
+    conclusion = " ".join(conclusion_parts)
 
     return {
         "overall_score": overall_match,
