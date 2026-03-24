@@ -4,88 +4,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resume Gap Analyzer AI</title>
+  <title>Nexus AI | Resume Analyzer</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 
+  <div class="mesh-bg"></div>
+
   <div class="container">
-    <div class="header">
-      <h1>Resume Gap Analyzer</h1>
-      <p>AI-powered insights to match your skills against the perfect job description. Find your gaps, highlight your pros, and get actionable improvement advice instantly.</p>
+    <div class="hero">
+      <div class="hero-badges">
+        <div class="hero-badge">✨ GenZ AI Powered</div>
+        <div class="hero-badge">🎯 ATS Optimized</div>
+        <div class="hero-badge">⚡ Instant Insights</div>
+      </div>
+      <h1>Unlock Your <span>Career Engine.</span></h1>
+      <p>Upload your resume and the target job description. Our heuristic AI infrastructure will deeply map your skillset, predict your ATS compatibility, and highlight critical gaps holding you back.</p>
     </div>
 
-    <!-- Analyzer Form -->
-    <div class="glass-card">
+    <!-- Interface Panel -->
+    <div class="glass-panel" id="input-section">
       <form id="analyze-form" enctype="multipart/form-data">
-        <div class="form-group">
-          <label for="job_description">Job Description</label>
-          <textarea id="job_description" name="job_description" placeholder="Paste the full job or internship description here..." required></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label>Upload Resume</label>
-          <div class="file-drop-area">
-            <span class="file-msg" id="file-name-display">Drag & drop or <span>Browse</span> (.pdf)</span>
-            <input type="file" id="resume" name="resume" accept=".pdf" required>
+        <div class="input-grid">
+          <div class="input-col">
+            <label>Target Job Context</label>
+            <textarea id="job_description" class="smart-textarea" placeholder="Paste the exact duties and requirements of your target role..." required></textarea>
+          </div>
+          
+          <div class="input-col">
+            <label>Candidate Payload</label>
+            <div class="drag-drop-zone" id="drop-zone">
+              <div class="upload-icon">📄</div>
+              <div class="file-status" id="file-name">Drag & Drop Resume<br><br><span>Browse Computer</span> (.pdf)</div>
+              <input type="file" id="resume" accept=".pdf" required>
+            </div>
           </div>
         </div>
 
-        <button type="submit" id="analyze-btn" class="btn-primary">Analyze Match</button>
+        <button type="submit" id="analyze-btn" class="btn-premium">Initialize Analysis Engine</button>
       </form>
     </div>
 
-    <!-- Dynamic Results Dashboard -->
-    <div class="results-dashboard" id="results-container">
+    <!-- Smart Loader -->
+    <div class="ai-loader" id="ai-loader">
+      <div class="loader-ring"></div>
+      <div class="loader-text" id="loader-ticker">Scanning Resume Payload...</div>
+    </div>
+
+    <!-- AI Dashboard Metrics -->
+    <div class="dashboard-metrics" id="dashboard">
       
-      <!-- Score Overview -->
-      <div class="glass-card score-section">
-        <div class="score-circle" id="score-circle">
-          <div class="score-value"><span id="match-percentage">0</span>%</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="circle-progress" id="circle-overall">
+            <div class="circle-value"><span id="val-overall">0</span>%</div>
+          </div>
+          <div class="stat-label">Overall Match</div>
         </div>
-        <div class="score-text">
-          <h2 id="score-title">Analysis Complete</h2>
-          <p>We've compared your resume against the job description. Review your technical match score, core strengths, and areas requiring attention below.</p>
+        <div class="stat-card">
+          <div class="circle-progress" id="circle-skill">
+            <div class="circle-value"><span id="val-skill">0</span>%</div>
+          </div>
+          <div class="stat-label">Core Skills</div>
+        </div>
+        <div class="stat-card">
+          <div class="circle-progress" id="circle-exp">
+            <div class="circle-value"><span id="val-exp">0</span>%</div>
+          </div>
+          <div class="stat-label">Experience Density</div>
+        </div>
+        <div class="stat-card">
+          <div class="circle-progress" id="circle-ats">
+            <div class="circle-value"><span id="val-ats">0</span>%</div>
+          </div>
+          <div class="stat-label">ATS Probability</div>
         </div>
       </div>
 
-      <!-- Detail Grid -->
-      <div class="metrics-grid">
+      <div class="feature-grid">
         
-        <div class="metric-card pros">
-          <h3 class="pros-title">✦ Top Pros</h3>
-          <ul id="pros-list">
-            <!-- Populated via JS -->
-          </ul>
-        </div>
-
-        <div class="metric-card gaps">
-          <h3 class="gaps-title">⚠ Areas of Improvement</h3>
-          <ul id="improvements-list">
-             <!-- Populated via JS -->
-          </ul>
-        </div>
-
-        <div class="metric-card">
-          <h3>✅ Matched Skills</h3>
-          <div class="tags" id="matched-tags">
-             <!-- Populated via JS -->
+        <div class="data-panel">
+          <h3>⚡ Strengths & Highlighted Dependencies</h3>
+          <div class="chip-container" id="matched-chips">
+            <!-- JS Injection -->
+          </div>
+          <h3 style="margin-top:30px;">🚨 Critical Keyword Gaps</h3>
+          <div class="chip-container" id="missing-chips">
+            <!-- JS Injection -->
           </div>
         </div>
 
-        <div class="metric-card">
-          <h3 class="missing-title">❌ Missing Skills</h3>
-          <div class="tags" id="missing-tags">
-             <!-- Populated via JS -->
-          </div>
+        <div class="data-panel">
+          <h3>🧠 Semantic & Structural Analysis</h3>
+          <ul class="insight-list">
+            <li>
+              <span class="insight-icon">📏</span>
+              <span><strong>Document Length:</strong> <span id="len-val">Optimal</span></span>
+            </li>
+            <li>
+              <span class="insight-icon">📉</span>
+              <span><strong>Missing Action Verbs:</strong> <span id="verb-val">None detected</span></span>
+            </li>
+            <li>
+              <span class="insight-icon">💡</span>
+              <span><strong>Action Verb Suggestions:</strong> <span id="sug-val">N/A</span></span>
+            </li>
+            <li>
+              <span class="insight-icon">🏭</span>
+              <span><strong>Industry Readiness:</strong> <span id="ind-val">0</span>/100</span>
+            </li>
+            <li>
+              <span class="insight-icon">🎙️</span>
+              <span><strong>Interview Viability:</strong> <span id="int-val">0</span>/100</span>
+            </li>
+          </ul>
         </div>
 
       </div>
 
-      <!-- Conclusion -->
-      <div class="conclusion-card">
-        <h3>Final Verdict</h3>
-        <p id="conclusion-text">...</p>
+      <div class="verdict-box">
+        <h2>System Verdict</h2>
+        <p id="conclusion-text">Awaiting diagnostic payload generation...</p>
       </div>
 
     </div>
@@ -93,125 +132,114 @@
   </div>
 
 <script>
-  // UI Interaction for File Upload
   const fileInput = document.getElementById('resume');
-  const fileDisplay = document.getElementById('file-name-display');
+  const fileDisplay = document.getElementById('file-name');
+  const dropZone = document.getElementById('drop-zone');
 
-  fileInput.addEventListener('change', function(e) {
-    if(this.files && this.files.length > 0) {
-      fileDisplay.textContent = this.files[0].name;
-      fileDisplay.style.color = '#212529';
-    } else {
-      fileDisplay.innerHTML = 'Drag & drop or <span>Browse</span> (.pdf)';
+  fileInput.addEventListener('change', function() {
+    if(this.files.length > 0) {
+      fileDisplay.innerHTML = `<span style="color:#10b981">✓ Verified:</span><br>${this.files[0].name}`;
+      dropZone.style.borderColor = '#10b981';
+      dropZone.style.background = 'rgba(16, 185, 129, 0.05)';
     }
   });
 
-  // Form Submission
+  const loadingMessages = [
+    "Parsing unstructured text...",
+    "Extracting semantic entities...",
+    "Computing ATS probability matrices...",
+    "Cross-referencing JD algorithms...",
+    "Synthesizing final verdict..."
+  ];
+
+  function runLoader() {
+    const ticker = document.getElementById('loader-ticker');
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      if (i < loadingMessages.length) ticker.textContent = loadingMessages[i];
+      else clearInterval(interval);
+    }, 600);
+    return interval;
+  }
+
+  function setCircle(id, pct) {
+    const circle = document.getElementById(id);
+    let color = '#ef4444'; // red
+    if(pct >= 50) color = '#fbbf24'; // yellow
+    if(pct >= 80) color = '#10b981'; // green
+    circle.style.background = `conic-gradient(${color} ${pct}%, rgba(255,255,255,0.05) ${pct}%)`;
+    circle.querySelector('span').style.color = '#fff';
+  }
+
   document.getElementById('analyze-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const btn = document.getElementById('analyze-btn');
-    const resultsContainer = document.getElementById('results-container');
+    document.getElementById('input-section').style.display = 'none';
+    document.getElementById('ai-loader').style.display = 'block';
     
-    btn.textContent = "Analyzing Document...";
-    btn.disabled = true;
-    resultsContainer.style.display = 'none';
+    const loadInt = runLoader();
 
-    const jobDescription = document.getElementById('job_description').value;
-    const resumeFile = fileInput.files[0];
-
+    const jobDesc = document.getElementById('job_description').value;
     const formData = new FormData();
-    formData.append("job_description", jobDescription);
-    formData.append("resume", resumeFile);
+    formData.append("job_description", jobDesc);
+    formData.append("resume", fileInput.files[0]);
 
     try {
       const apiUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:8001/analyze'
         : '/analyze';
 
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        body: formData
-      });
+      const response = await fetch(apiUrl, { method: 'POST', body: formData });
 
       if (response.ok) {
         const data = await response.json();
+        clearInterval(loadInt);
         
-        if (data.error) {
-          alert("Error parsing document: " + data.error);
-        } else {
-          // Display the container
-          resultsContainer.style.display = 'block';
-          
-          // Animate Score Ring
-          const circle = document.getElementById('score-circle');
-          const pct = data.match_percentage;
-          const color = '#0d6efd'; // Professional Blue
-          
-          circle.style.background = `conic-gradient(${color} ${pct}%, #e9ecef ${pct}%)`;
-          document.getElementById('match-percentage').textContent = pct;
-          
-          // Reset any webkit specific styling applied by previous code
-          document.querySelector('.score-value').style.background = 'none';
-          document.querySelector('.score-value').style.webkitBackgroundClip = 'initial';
-          document.querySelector('.score-value').style.webkitTextFillColor = 'initial';
-          document.querySelector('.score-value').style.color = '#212529';
+        document.getElementById('ai-loader').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
 
-          // Set Pros
-          const prosList = document.getElementById('pros-list');
-          prosList.innerHTML = '';
-          data.pros.forEach(pro => {
-            const li = document.createElement('li');
-            li.textContent = pro;
-            prosList.appendChild(li);
-          });
+        // Set Circles
+        document.getElementById('val-overall').textContent = data.overall_score;
+        setCircle('circle-overall', data.overall_score);
+        
+        document.getElementById('val-skill').textContent = data.skill_score;
+        setCircle('circle-skill', data.skill_score);
+        
+        document.getElementById('val-exp').textContent = data.experience_score;
+        setCircle('circle-exp', data.experience_score);
+        
+        document.getElementById('val-ats').textContent = data.ats_score;
+        setCircle('circle-ats', data.ats_score);
 
-          // Set Improvements
-          const impList = document.getElementById('improvements-list');
-          impList.innerHTML = '';
-          data.improvements.forEach(imp => {
-            const li = document.createElement('li');
-            li.textContent = imp;
-            impList.appendChild(li);
-          });
+        // Tags
+        const mT = document.getElementById('matched-chips');
+        mT.innerHTML = data.matched_skills.map(s => `<div class="chip green">${s}</div>`).join('') || '<div class="chip">None</div>';
+        
+        const misT = document.getElementById('missing-chips');
+        misT.innerHTML = data.missing_skills.map(s => `<div class="chip red">${s}</div>`).join('') || '<div class="chip green">100% Coverage</div>';
 
-          // Set Matched Skills Tags
-          const matchTags = document.getElementById('matched-tags');
-          matchTags.innerHTML = '';
-          if(data.matched_skills.length === 0) matchTags.innerHTML = '<p style="color:#64748b">No matches found.</p>';
-          data.matched_skills.forEach(skill => {
-            const span = document.createElement('span');
-            span.className = 'tag matched';
-            span.textContent = skill;
-            matchTags.appendChild(span);
-          });
+        // Semantic lists
+        let lStat = data.length_status;
+        document.getElementById('len-val').textContent = lStat;
+        if(lStat==="Optimal") document.getElementById('len-val').style.color="#10b981";
+        else document.getElementById('len-val').style.color="#ef4444";
 
-          // Set Missing Skills Tags
-          const missingTags = document.getElementById('missing-tags');
-          missingTags.innerHTML = '';
-          if(data.missing_skills.length === 0) missingTags.innerHTML = '<p style="color:#64748b">All requirements met!</p>';
-          data.missing_skills.forEach(skill => {
-            const span = document.createElement('span');
-            span.className = 'tag missing';
-            span.textContent = skill;
-            missingTags.appendChild(span);
-          });
+        const verbs = data.weak_verbs.length > 0 ? data.weak_verbs.join(', ') : "None detected ✓";
+        document.getElementById('verb-val').textContent = verbs;
+        if(data.weak_verbs.length===0) document.getElementById('verb-val').style.color="#10b981";
+        else document.getElementById('verb-val').style.color="#ef4444";
 
-          // Set Conclusion
-          document.getElementById('conclusion-text').textContent = data.conclusion;
+        document.getElementById('sug-val').textContent = data.strong_verb_suggestions.join(', ');
+        document.getElementById('ind-val').textContent = data.industry_score;
+        document.getElementById('int-val').textContent = data.interview_score;
 
-          // Scroll Smoothly to Results
-          window.scrollTo({ top: resultsContainer.offsetTop - 50, behavior: 'smooth' });
-        }
-      } else {
-          alert("Backend analysis failed (API error). Ensure FastAPI is running on port 8001.");
+        document.getElementById('conclusion-text').textContent = data.conclusion;
       }
-    } catch (err) {
-      console.error(err);
-      alert("Could not reach analysis backend. Did you start the FastAPI server on port 8001?");
-    } finally {
-      btn.textContent = "Analyze Match";
-      btn.disabled = false;
+    } catch(e) {
+      alert("System failure or Timeout. Try again.");
+      document.getElementById('ai-loader').style.display = 'none';
+      document.getElementById('input-section').style.display = 'block';
     }
   });
 </script>

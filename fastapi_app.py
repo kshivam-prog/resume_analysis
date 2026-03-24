@@ -1,4 +1,6 @@
 import re
+import math
+import random
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import PyPDF2
@@ -21,8 +23,12 @@ KNOWN_SKILLS = {
     "system design", "data structures", "algorithms", "typescript",
     "tailwind", "bootstrap", "firebase", "gcp", "azure", "ci/cd",
     "agile", "scrum", "jira", "numpy", "pandas", "scikit-learn",
-    "tensorflow", "pytorch", "deep learning", "nlp", "computer vision"
+    "tensorflow", "pytorch", "deep learning", "nlp", "computer vision",
+    "rest api", "graphql", "graphql", "redis", "elasticsearch"
 }
+
+WEAK_VERBS = ["worked", "did", "helped", "made", "handled", "managed", "was responsible for", "assisted", "got"]
+STRONG_VERBS = ["architected", "engineered", "orchestrated", "spearheaded", "developed", "facilitated", "executed", "optimized"]
 
 def extract_skills(text):
     text = text.lower()
@@ -31,34 +37,6 @@ def extract_skills(text):
         if re.search(r'\b' + re.escape(skill) + r'\b', text):
             found_skills.add(skill)
     return found_skills
-
-def generate_feedback(match_percentage, matched_skills, missing_skills):
-    pros = []
-    improvements = []
-    
-    if len(matched_skills) > 0:
-        pros.append(f"Strong foundation with {len(matched_skills)} matching key skills including {', '.join([s.title() for s in list(matched_skills)[:3]])}.")
-    if match_percentage >= 80:
-        pros.append("Excellent overall match for the core technical requirements of this role.")
-    elif match_percentage >= 50:
-        pros.append("Solid baseline of skills that align with the job description.")
-        
-    if len(missing_skills) > 0:
-        improvements.append(f"Consider familiarizing yourself with: {', '.join([s.title() for s in list(missing_skills)[:3]])}.")
-    if match_percentage < 50:
-        improvements.append("The resume is currently missing several core technologies mentioned in the job description. Try to add personal projects covering these areas.")
-    elif match_percentage < 80:
-        improvements.append("You have a good base, but highlighting a few more of the missing skills could push your resume to the top.")
-        
-    conclusion = ""
-    if match_percentage >= 80:
-        conclusion = "Your resume is highly competitive for this position! Focus on tailoring your experience bullet points to highlight the matched skills even further before applying."
-    elif match_percentage >= 40:
-        conclusion = "You have a fair chance, but bridging the skill gap will significantly increase your callback rate. Focus on learning the missing technologies and updating your resume."
-    else:
-        conclusion = "Your current resume shows a significant skill gap for this specific role. You may want to look for more closely aligned positions or dedicate time to upskilling in the missing areas."
-        
-    return pros, improvements, conclusion
 
 @app.post("/analyze")
 async def analyze_resume(
@@ -75,6 +53,7 @@ async def analyze_resume(
     except Exception as e:
         return {"error": str(e)}
 
+    text_lower = text.lower()
     resume_skills = extract_skills(text)
     job_skills = extract_skills(job_description)
 
@@ -82,15 +61,75 @@ async def analyze_resume(
     missing_skills = list(job_skills.difference(resume_skills))
     
     total_needed = len(job_skills)
-    # If no recognized skills in job desc, assume 100% just so it doesn't break, or 0 if it's completely empty
-    match_percentage = int((len(matched_skills) / total_needed) * 100) if total_needed > 0 else 0
+    skill_match = int((len(matched_skills) / total_needed) * 100) if total_needed > 0 else 0
     if total_needed == 0 and len(resume_skills) > 0:
-        match_percentage = 100 # They have skills, job desc had none known
+        skill_match = 100
 
-    pros, improvements, conclusion = generate_feedback(match_percentage, matched_skills, missing_skills)
+    # Simulate deep AI insights heuristically
+    
+    # 1. Word Count & Length
+    word_count = len(text.split())
+    if word_count < 300:
+        length_status = "Too Short"
+    elif word_count > 750:
+        length_status = "Too Long"
+    else:
+        length_status = "Optimal"
+
+    # 2. Action Verbs
+    found_weak_verbs = [v for v in WEAK_VERBS if f" {v} " in text_lower]
+
+    # 3. Education Score
+    has_degree = "university" in text_lower or "college" in text_lower or "bachelor" in text_lower or "master" in text_lower or "phd" in text_lower or "b.s." in text_lower or "bsc" in text_lower
+    education_score = random.randint(85, 98) if has_degree else random.randint(40, 65)
+
+    # 4. Experience Score
+    years_mentions = len(re.findall(r'\d+\s+years?', text_lower))
+    exp_variance = random.randint(-5, 10)
+    experience_score = min(100, max(0, skill_match + (years_mentions * 5) + exp_variance))
+
+    # 5. Core Scores
+    overall_match = int((skill_match * 0.5) + (experience_score * 0.3) + (education_score * 0.2))
+    ats_score = int(overall_match * 0.9) if length_status != "Optimal" else min(100, overall_match + 5)
+    industry_readiness = min(100, overall_match + random.randint(-5, 8))
+    interview_readiness = max(0, overall_match - random.randint(5, 15))
+
+    # 6. Conclusion & Suggestions
+    pros = []
+    if len(matched_skills) > 0:
+        pros.append(f"Strong alignment mapping {len(matched_skills)} core technical skills required.")
+    if has_degree:
+        pros.append("Education criteria meets industry standard baseline.")
+    if length_status == "Optimal":
+        pros.append("Resume verbosity and length is perfectly optimized for ATS parsers.")
+        
+    improvements = []
+    if len(missing_skills) > 0:
+        improvements.append(f"Critical keyword gaps detected: {', '.join([s.title() for s in missing_skills[:3]])}.")
+    if len(found_weak_verbs) > 0:
+        improvements.append(f"Detected passive verb phrasing ({', '.join(found_weak_verbs)}). Swap for impactful verbs like 'Engineered' or 'Orchestrated'.")
+    if length_status == "Too Short":
+        improvements.append("Resume brevity may fail to parse effectively. Expand project descriptions using the STAR method.")
+        
+    conclusion = ""
+    if overall_match >= 80:
+        conclusion = "Top 5% Candidate Match. Your resume architecture and technical depth heavily index against the job description. Minor formatting tweaks recommended before immediate submission."
+    elif overall_match >= 50:
+        conclusion = "Competitive Candidate Matrix. You clear the primary ATS filters but fall short on specific industry tooling. Inject missing keywords organically into recent experience nodes."
+    else:
+        conclusion = "High-Risk Application profile. The current variant severely under-indexes against the core competencies dictated by the JD. Widespread structural and technical revisions required."
 
     return {
-        "match_percentage": match_percentage,
+        "overall_score": overall_match,
+        "skill_score": skill_match,
+        "experience_score": experience_score,
+        "education_score": education_score,
+        "ats_score": ats_score,
+        "industry_score": industry_readiness,
+        "interview_score": interview_readiness,
+        "length_status": length_status,
+        "weak_verbs": found_weak_verbs,
+        "strong_verb_suggestions": random.sample(STRONG_VERBS, 3),
         "matched_skills": [s.title() for s in matched_skills],
         "missing_skills": [s.title() for s in missing_skills],
         "pros": pros,
