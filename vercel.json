@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "resumeAnalyzer/resumeAnalyzer/wsgi.py",
+      "src": "index.py",
       "use": "@vercel/python"
     },
     {
@@ -17,7 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "resumeAnalyzer/resumeAnalyzer/wsgi.py"
+      "dest": "index.py"
     }
   ]
 }
